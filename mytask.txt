@@ -1,0 +1,81 @@
+from django.db import models
+
+class Player(models.Model):
+    name = models.CharField(max_length=100)
+    surname = models.CharField(max_length=100)
+    age = models.FloatField()
+
+    def __str__(self):
+        return self.name
+
+class Team(models.Model):
+    name = models.CharField(max_length=100)
+    players = models.ManyToManyField(Player, blank=True)
+    rank = models.FloatField()
+
+    def __str__(self):
+        return self.name
+
+
+1.from projects.models import Player
+
+def create_player(name, surname, age):
+    player, created = Player.objects.get_or_create(name=name, surname=surname, age=age)
+    if created:
+        print("Elave olundu")
+    else:
+        print("player var")
+    return player
+
+create_player("Aytac", "M", 18)
+
+2.from django.db.models import Avg
+
+
+team = Team.objects.first()
+average_age = team.players.aggregate(avg_age=Avg('age'))['avg_age']
+
+
+3.from django.db.models import Max
+
+
+max_age_player = Player.objects.aggregate(max_age=Max('age'))
+team_with_max_age_player = Team.objects.filter(players__age=max_age_player['max_age']).first()
+team_with_max_age_player
+
+4. from django.db.models import Min
+
+
+min_age_player = Player.objects.aggregate(min_age=Min('age'))
+team_with_min_age_player = Team.objects.filter(players__age=min_age_player['min_age']).first()
+team_with_max_age_player
+
+5. from django.db.models import Avg
+from django.db.models import Max
+from django.db.models import Q
+
+teams = Team.objects.exclude(name__startswith='t').filter(
+    Q(players__age__gt=25) | Q(players__age=Max('players__age'))
+)
+
+for team in teams:
+    team
+
+6. players = Player.objects.filter(
+    ~Q(name__startswith='Hormet') | ~Q(surname__endswith='Hemidov'),
+    Q(age__gt=Player.objects.aggregate(avg_age=Avg('age'))['avg_age'])
+)
+
+for player in players:
+    player
+
+7.from django.db.models import Avg, Count
+
+average_rank = Team.objects.aggregate(avg_rank=Avg('rank'))['avg_rank']
+teams = Team.objects.annotate(player_count=Count('players')).filter(rank__gt=average_rank, player_count__lt=3).order_by('-rank')
+
+for team in teams:
+    team
+
+8.
+
